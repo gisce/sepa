@@ -9,43 +9,16 @@ import click
 from dateutil.relativedelta import relativedelta
 import json
 
-#params
-data = dict(
-    #filepath = "/home/afita/Documents/agusti/Gospelians/gospelians/rebuts/202301/202301.csv",
-    filepath = "/home/afita/Documents/agusti/Gospelians/gospelians/rebuts/202304/202306.csv",
-    due_date = '2023-06-21',
-    payment_name = '202306 QUOTA GOSPELIANS 3er TRIMESTRE',
-    concept = "QUOTA GOSPELIANS 3er TRIM",
-    # Constant
-    company_name = 'ASSOCIACIO MUSICAL GOSPELIANS DE GIRONA',
-    vat = 'G17977521',
-    sepa_id = 'ES84000G17977521',
-    schmeid = 'ES84019G17977521',
-    iban = 'ES3700810146560001150423',
-    bic = 'BSABESBBXXX',
-    mandate_default_date = '2009-10-31',
-
-)
 
 CSV_HEAD_LINES = 1
 CHAR_OFFSET = 55
-MANDATE_DEFAULT_DATE = data['mandate_default_date']
 
-
-# FORMAT MAR
-ROW_POS_MANDATE = 2
-ROW_POS_NAME = 3
-ROW_POS_IBAN = 4
-ROW_POS_AMOUNT = 5
-ROW_AMOUNT_FACTOR = 100.0
-
-# FORMAT AGUSTI
 ROW_POS_MANDATE = 1
 ROW_POS_NAME = 2
 ROW_POS_IBAN = 3
 ROW_POS_AMOUNT = 4
-ROW_AMOUNT_FACTOR = 1.0
 
+ROW_AMOUNT_FACTOR = 1.0
 
 
 def get_lines(filepath):
@@ -74,7 +47,7 @@ def calculate_iban(acc_number, country_code):
     iban = '{}{}{}'.format(country_code, iban_check_code_str, acc_number)
     return iban
 
-def get_mandate(mandate_ref, creditor_id, mandate_sign_date=MANDATE_DEFAULT_DATE):
+def get_mandate(mandate_ref, creditor_id, mandate_sign_date='2009-10-31'):
 
     mandate_info = sepa19.MandateInformation()
     mandate_fields = {
@@ -145,7 +118,8 @@ def get_operation_infos(lines, creditor_identifier, data):
             mandate_ref = line[ROW_POS_MANDATE]
         mandate_ref = line[ROW_POS_MANDATE]
         amount = line[ROW_POS_AMOUNT]
-        mandate_sign_date = '2009-10-31'
+        mandate_sign_date = data['mandate_default_date']
+
         mandate = get_mandate(mandate_ref, creditor_identifier, mandate_sign_date)
         #payment_type_info = get_payment_type_info(line)
 
@@ -369,7 +343,7 @@ def initiating_party(data):
 
     return init_party
 
-def sepa_header(msg_id, lines):
+def sepa_header(msg_id, lines, data):
     # HEADER
     header = sepa19.SepaHeader()
     total_amount = sum([int(l[ROW_POS_AMOUNT])/ROW_AMOUNT_FACTOR for l in lines])
@@ -408,7 +382,6 @@ def sepa_header(msg_id, lines):
               help='output file_path',
               type=str, default='/tmp/rebuts.xml')
 def create_sepa19(filepath, config, due_date, payment_name, concept, output):
-    # /home/afita/codi/erp/addons/spain/l10n_es_extras/l10n_ES_remesas/wizard/sepa19.py
     with open(config, 'r') as config_file:
          data = json.load(config_file)
     data.update({
@@ -425,7 +398,7 @@ def create_sepa19(filepath, config, due_date, payment_name, concept, output):
     xml = sepa19.DirectDebitInitDocument()
     direct_debit = sepa19.DirectDebitInitMessage()
 
-    header = sepa_header(msg_id(data['vat']), lines)
+    header = sepa_header(msg_id(data['vat']), lines, data)
 
     payment_info = []
     payment_info = get_payment_info(lines, data)
