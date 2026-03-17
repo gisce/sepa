@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from libcomxml.core import XmlModel, XmlField
+from libcomxml.core import XmlModel, XmlField as XmlField_core
+import unicodedata
+from six import string_types
 
 """
 " More info and examples at http://www.iso20022.org/message_archive.page
@@ -12,6 +14,33 @@ from libcomxml.core import XmlModel, XmlField
 """
 
 MAX_NAME = 70
+
+class XmlField(XmlField_core):
+    def set_value(self, value):
+        if isinstance(value, string_types):
+            value = self.normalitzar_sepa(value)
+        super(XmlField_core).set_value(value)
+
+    @staticmethod
+    def normalitzar_sepa(text):
+        if not text:
+            return ""
+        # 1. Substitucions directes (Ñ -> N, Ç -> C)
+        replacements = {
+            'Ñ': 'N', 'ñ': 'n',
+            'Ç': 'C', 'ç': 'c',
+        }
+        for orig, dest in replacements.items():
+            text = text.replace(orig, dest)
+        # 2. Treure accents i dièresis (Normalització NFKD)
+        text = "".join(
+            c for c in unicodedata.normalize('NFKD', text)
+            if unicodedata.category(c) != 'Mn'
+        )
+        # 3. Filtre de caràcters permesos (Whitelist de la imatge)
+        # Nota: L'espai està inclòs al final.
+        allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-?:().,'+ "
+        return "".join(c for c in text if c in allowed)
 
 ############################### Level 7 ######################################
 
