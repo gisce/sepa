@@ -25,7 +25,9 @@ class XmlField(XmlField_core):
     def normalitzar_sepa(text):
         if not text:
             return ""
-        import six                                                                                                                                                                                                         if six.PY2 and isinstance(text, bytes):                                                                                                                                                                                text = text.decode('utf-8')
+        import six
+        if six.PY2 and isinstance(text, bytes):
+            text = text.decode('utf-8')
         # 1. Substitucions directes (Ñ -> N, Ç -> C)
         replacements = {
             'Ñ': 'N', 'ñ': 'n',
