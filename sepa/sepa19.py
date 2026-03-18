@@ -19,12 +19,13 @@ class XmlField(XmlField_core):
     def set_value(self, value):
         if isinstance(value, string_types):
             value = self.normalitzar_sepa(value)
-        super(XmlField_core).set_value(value)
+        XmlField_core.set_value(self, value)
 
     @staticmethod
     def normalitzar_sepa(text):
         if not text:
             return ""
+        import six                                                                                                                                                                                                         if six.PY2 and isinstance(text, bytes):                                                                                                                                                                                text = text.decode('utf-8')
         # 1. Substitucions directes (Ñ -> N, Ç -> C)
         replacements = {
             'Ñ': 'N', 'ñ': 'n',
@@ -33,14 +34,16 @@ class XmlField(XmlField_core):
         for orig, dest in replacements.items():
             text = text.replace(orig, dest)
         # 2. Treure accents i dièresis (Normalització NFKD)
-        text = "".join(
+        text = u"".join(
             c for c in unicodedata.normalize('NFKD', text)
             if unicodedata.category(c) != 'Mn'
         )
         # 3. Filtre de caràcters permesos (Whitelist de la imatge)
         # Nota: L'espai està inclòs al final.
-        allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-?:().,'+ "
-        return "".join(c for c in text if c in allowed)
+        allowed = u"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-?:().,'+ "
+        return u"".join(c for c in text if c in allowed)
+
+    value = property(XmlField_core.get_value, set_value)
 
 ############################### Level 7 ######################################
 
