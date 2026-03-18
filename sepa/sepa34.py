@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-from libcomxml.core import XmlModel, XmlField
+from .sepa19 import XmlModel, XmlField
 from .sepa19 import SepaHeader, GenericPhysicalLegalEntity, PaymentTypeInfo
 from .sepa19 import BankAccount, BankAgent, PaymentIdentifier, Purpose
 from .sepa19 import RegulatoryInformation, Concept
